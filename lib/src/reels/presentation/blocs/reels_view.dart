@@ -7,7 +7,7 @@ import 'package:video_player/video_player.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
 const _iconSize = 52.0;
-const _iconColor = AppColors.white;
+const _iconColor = AppColors.white70;
 typedef VideoPlayerBuilder =
     Widget Function(
       BuildContext context,
@@ -145,8 +145,8 @@ class _ReelsViewState extends State<ReelsView> with TickerProviderStateMixin {
           _controller,
         ) ??
         Container(
-          height: MediaQuery.sizeOf(context).height,
-          width: MediaQuery.sizeOf(context).width,
+          height: context.height,
+          width: context.width,
           color:
               _controller.videoPlayerControllerList[index].value.isPlaying
                   ? AppColors.black38
@@ -183,24 +183,15 @@ class _VideoFullScreenPageState extends State<VideoFullScreenPage> {
   @override
   void initState() {
     super.initState();
-    _isSeekingNotifier = ValueNotifier(false);
-    _isPlayingNotifier = ValueNotifier(false);
+    _isSeekingNotifier = ValueNotifier<bool>(false);
+    _isPlayingNotifier = ValueNotifier<bool>(false);
 
-    _currentValueNotifier = ValueNotifier(
+    _currentValueNotifier = ValueNotifier<Duration>(
       widget.videoPlayerController.value.position,
     );
 
     _controller = widget.videoPlayerController;
     _controller.addListener(_onValueChangeListener);
-  }
-
-  @override
-  void didUpdateWidget(covariant VideoFullScreenPage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.videoPlayerController.value.position !=
-        oldWidget.videoPlayerController.value.position) {
-      _currentValueNotifier.value = widget.videoPlayerController.value.position;
-    }
   }
 
   void _onValueChangeListener() {
@@ -230,8 +221,8 @@ class _VideoFullScreenPageState extends State<VideoFullScreenPage> {
     return Stack(
       children: [
         Container(
-          height: MediaQuery.sizeOf(context).height,
-          width: MediaQuery.sizeOf(context).width,
+          height: context.height,
+          width: context.width,
           color: AppColors.black,
           child: Center(
             child: AspectRatio(
@@ -242,29 +233,26 @@ class _VideoFullScreenPageState extends State<VideoFullScreenPage> {
         ),
         Positioned(
           child: Center(
-            child: Opacity(
-              opacity: 0.5,
-              child: AnimatedOpacity(
-                opacity: widget.controller.visible ? 1 : 0,
-                duration: const Duration(milliseconds: 500),
-                child:
-                    _controller.value.isPlaying
-                        ? const Icon(
-                          Icons.play_arrow,
-                          color: _iconColor,
-                          size: _iconSize,
-                        )
-                        : const Icon(
-                          Icons.pause,
-                          color: _iconColor,
-                          size: _iconSize,
-                        ),
-              ),
+            child: AnimatedOpacity(
+              opacity: widget.controller.visible ? 1 : 0,
+              duration: const Duration(milliseconds: 500),
+              child:
+                  _controller.value.isPlaying
+                      ? const Icon(
+                        Icons.play_arrow,
+                        color: _iconColor,
+                        size: _iconSize,
+                      )
+                      : const Icon(
+                        Icons.pause,
+                        color: _iconColor,
+                        size: _iconSize,
+                      ),
             ),
           ),
         ),
         Positioned(
-          bottom: 50,
+          bottom: 0,
           child: ValueListenableBuilder<bool>(
             valueListenable: _isSeekingNotifier,
             builder: (context, isSeeking, _) {
@@ -308,8 +296,8 @@ class _VideoFullScreenPageState extends State<VideoFullScreenPage> {
                       },
                     ),
                   SizedBox(
-                    height: 50,
-                    width: MediaQuery.sizeOf(context).width,
+                    height: 5,
+                    width: context.width,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8.0),
                       child: VideoProgressBar(

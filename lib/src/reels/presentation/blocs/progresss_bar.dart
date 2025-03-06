@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:reels_demo/core/core.dart';
 import 'package:reels_demo/src/reels/presentation/blocs/progress_colors.dart';
 import 'package:video_player/video_player.dart';
 
@@ -153,9 +154,9 @@ class StaticProgressBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: MediaQuery.of(context).size.height,
-      width: MediaQuery.of(context).size.width,
-      color: Colors.transparent,
+      height: context.height,
+      width: context.width,
+      color: AppColors.transparent,
       child: CustomPaint(
         painter: _ProgressBarPainter(
           value: value,
@@ -265,7 +266,7 @@ class _ProgressBarPainter extends CustomPainter {
             ),
           );
 
-      canvas.drawShadow(shadowPath, Colors.black, 0.2, false);
+      canvas.drawShadow(shadowPath, AppColors.black, 0.2, false);
     }
 
     canvas.drawCircle(
