@@ -16,7 +16,6 @@ typedef VideoPlayerBuilder =
       VideoPlayerController videoPlayerController,
       PageController pageController,
       ReelsController controller,
-      bool isSeeking,
     );
 
 class ReelsView extends StatefulWidget {
@@ -41,12 +40,10 @@ class ReelsView extends StatefulWidget {
 
 class _ReelsViewState extends State<ReelsView> with TickerProviderStateMixin {
   late final ReelsController _controller;
-  late final ValueNotifier<bool> _isSeekingNotifier;
 
   @override
   void initState() {
     super.initState();
-    _isSeekingNotifier = ValueNotifier(false);
     _controller = ReelsController(
       vsync: this,
       reelsVideoList: widget.videoList ?? [],
@@ -58,25 +55,21 @@ class _ReelsViewState extends State<ReelsView> with TickerProviderStateMixin {
   @override
   void dispose() {
     _controller.dispose();
-    _isSeekingNotifier.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, _) {
-          return PageView.builder(
-            controller: _controller.pageController,
-            itemCount: _controller.pageCount,
-            scrollDirection: Axis.vertical,
-            itemBuilder: (context, index) => _buildTile(index),
-          );
-        },
-      ),
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        return PageView.builder(
+          controller: _controller.pageController,
+          itemCount: _controller.pageCount,
+          scrollDirection: Axis.vertical,
+          itemBuilder: (context, index) => _buildTile(index),
+        );
+      },
     );
   }
 
@@ -141,49 +134,37 @@ class _ReelsViewState extends State<ReelsView> with TickerProviderStateMixin {
     final videoWidget = VideoFullScreenPage(
       controller: _controller,
       videoPlayerController: _controller.videoPlayerControllerList[index],
-      isSeekingNotifier: _isSeekingNotifier,
     );
 
-    return ValueListenableBuilder<bool>(
-      valueListenable: _isSeekingNotifier,
-      builder: (context, isSeeking, child) {
-        return widget.builder?.call(
-              context,
-              index,
-              videoWidget,
-              _controller.videoPlayerControllerList[index],
-              _controller.pageController,
-              _controller,
-              isSeeking,
-            ) ??
-            child!;
-      },
-      child: Container(
-        height: MediaQuery.sizeOf(context).height,
-        width: MediaQuery.sizeOf(context).width,
-        color:
-            _controller.videoPlayerControllerList[index].value.isPlaying
-                ? AppColors.black38
-                : AppColors.transparent,
-        child: videoWidget,
-      ),
-    );
+    return widget.builder?.call(
+          context,
+          index,
+          videoWidget,
+          _controller.videoPlayerControllerList[index],
+          _controller.pageController,
+          _controller,
+        ) ??
+        Container(
+          height: MediaQuery.sizeOf(context).height,
+          width: MediaQuery.sizeOf(context).width,
+          color:
+              _controller.videoPlayerControllerList[index].value.isPlaying
+                  ? AppColors.black38
+                  : AppColors.transparent,
+          child: videoWidget,
+        );
   }
 }
 
 class VideoFullScreenPage extends StatefulWidget {
   final ReelsController controller;
   final VideoPlayerController videoPlayerController;
-  final ValueNotifier<bool> isSeekingNotifier;
 
   const VideoFullScreenPage({
     super.key,
     required this.controller,
     required this.videoPlayerController,
-    required this.isSeekingNotifier,
   });
-
-  static const _scaleFactor = 2;
 
   @override
   State<VideoFullScreenPage> createState() => _VideoFullScreenPageState();
@@ -191,12 +172,20 @@ class VideoFullScreenPage extends StatefulWidget {
 
 class _VideoFullScreenPageState extends State<VideoFullScreenPage> {
   late final ValueNotifier<Duration> _currentValueNotifier;
+  late final ValueNotifier<bool> _isSeekingNotifier;
+  late final ValueNotifier<bool> _isPlayingNotifier;
 
   late final VideoPlayerController _controller;
+
+  static const _scaleFactor = 2;
+  static const _positionSize = 28.0;
 
   @override
   void initState() {
     super.initState();
+    _isSeekingNotifier = ValueNotifier(false);
+    _isPlayingNotifier = ValueNotifier(false);
+
     _currentValueNotifier = ValueNotifier(
       widget.videoPlayerController.value.position,
     );
@@ -216,6 +205,10 @@ class _VideoFullScreenPageState extends State<VideoFullScreenPage> {
 
   void _onValueChangeListener() {
     _currentValueNotifier.value = _controller.value.position;
+    _isPlayingNotifier.value = _controller.value.isPlaying;
+    if (_controller.value.isCompleted) {
+      _controller.play();
+    }
   }
 
   @override
@@ -225,12 +218,21 @@ class _VideoFullScreenPageState extends State<VideoFullScreenPage> {
   }
 
   @override
+  void dispose() {
+    _isPlayingNotifier.dispose();
+    _isSeekingNotifier.dispose();
+    _currentValueNotifier.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        SizedBox(
+        Container(
           height: MediaQuery.sizeOf(context).height,
           width: MediaQuery.sizeOf(context).width,
+          color: AppColors.black,
           child: Center(
             child: AspectRatio(
               aspectRatio: _controller.value.aspectRatio,
@@ -240,74 +242,72 @@ class _VideoFullScreenPageState extends State<VideoFullScreenPage> {
         ),
         Positioned(
           child: Center(
-            child: ListenableBuilder(
-              listenable: widget.controller,
-              builder:
-                  (context, _) => Opacity(
-                    opacity: 0.5,
-                    child: AnimatedOpacity(
-                      opacity: widget.controller.visible ? 1 : 0,
-                      duration: const Duration(milliseconds: 500),
-                      child:
-                          _controller.value.isPlaying
-                              ? const Icon(
-                                Icons.play_arrow,
-                                color: _iconColor,
-                                size: _iconSize,
-                              )
-                              : const Icon(
-                                Icons.pause,
-                                color: _iconColor,
-                                size: _iconSize,
-                              ),
-                    ),
-                  ),
+            child: Opacity(
+              opacity: 0.5,
+              child: AnimatedOpacity(
+                opacity: widget.controller.visible ? 1 : 0,
+                duration: const Duration(milliseconds: 500),
+                child:
+                    _controller.value.isPlaying
+                        ? const Icon(
+                          Icons.play_arrow,
+                          color: _iconColor,
+                          size: _iconSize,
+                        )
+                        : const Icon(
+                          Icons.pause,
+                          color: _iconColor,
+                          size: _iconSize,
+                        ),
+              ),
             ),
           ),
         ),
         Positioned(
-          bottom: 0,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ValueListenableBuilder<Duration>(
-                valueListenable: _currentValueNotifier,
-                builder: (context, duration, _) {
-                  return Center(
-                    child: RichText(
-                      text: TextSpan(
-                        text: duration.formattedDuration,
-                        style: TextStyle(
-                          color: AppColors.white,
-                          fontSize: 24.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        children: [
-                          TextSpan(
-                            text: " / ",
-                            style: TextStyle(
-                              fontSize: 20.0,
-                              color: AppColors.white70,
+          bottom: 50,
+          child: ValueListenableBuilder<bool>(
+            valueListenable: _isSeekingNotifier,
+            builder: (context, isSeeking, _) {
+              final double barHeight = (isSeeking ? _scaleFactor : 1) * 2;
+              final double handleHeight = (isSeeking ? _scaleFactor : 1) * 2;
+              return Column(
+                children: [
+                  if (isSeeking)
+                    ValueListenableBuilder<Duration>(
+                      valueListenable: _currentValueNotifier,
+                      builder: (context, duration, _) {
+                        return Center(
+                          child: RichText(
+                            text: TextSpan(
+                              text: duration.formattedDuration,
+                              style: TextStyle(
+                                color: AppColors.white,
+                                fontSize: _positionSize,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              children: [
+                                TextSpan(
+                                  text: " / ",
+                                  style: TextStyle(
+                                    fontSize: 20.0,
+                                    color: AppColors.white70,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text:
+                                      _controller
+                                          .value
+                                          .duration
+                                          .formattedDuration,
+                                  style: TextStyle(color: AppColors.white70),
+                                ),
+                              ],
                             ),
                           ),
-                          TextSpan(
-                            text: _controller.value.duration.formattedDuration,
-                            style: TextStyle(color: AppColors.white70),
-                          ),
-                        ],
-                      ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
-              ValueListenableBuilder<bool>(
-                valueListenable: widget.isSeekingNotifier,
-                builder: (context, isSeeking, _) {
-                  final double barHeight =
-                      (isSeeking ? VideoFullScreenPage._scaleFactor : 1) * 2;
-                  final double handleHeight =
-                      (isSeeking ? VideoFullScreenPage._scaleFactor : 1) * 2;
-                  return SizedBox(
+                  SizedBox(
                     height: 50,
                     width: MediaQuery.sizeOf(context).width,
                     child: Padding(
@@ -321,10 +321,9 @@ class _VideoFullScreenPageState extends State<VideoFullScreenPage> {
                           playedColor: AppColors.progressBar,
                           bufferedColor: AppColors.white30,
                         ),
-                        onDragStart:
-                            () => widget.isSeekingNotifier.value = true,
+                        onDragStart: () => _isSeekingNotifier.value = true,
                         onDragEnd: () async {
-                          widget.isSeekingNotifier.value = false;
+                          _isSeekingNotifier.value = false;
                           await _controller.play();
                         },
                         onDragUpdate:
@@ -332,10 +331,10 @@ class _VideoFullScreenPageState extends State<VideoFullScreenPage> {
                                 _currentValueNotifier.value = duration,
                       ),
                     ),
-                  );
-                },
-              ),
-            ],
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ],
