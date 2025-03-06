@@ -69,6 +69,7 @@ class _ReelsViewState extends State<ReelsView> with TickerProviderStateMixin {
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, _) {
+        log("page count => ${_controller.pageCount}");
         return PageView.builder(
           controller: _controller.pageController,
           itemCount: _controller.pageCount,
@@ -150,6 +151,7 @@ class _ReelsViewState extends State<ReelsView> with TickerProviderStateMixin {
                   ),
                 ),
               ),
+
               Positioned(
                 right: 10,
                 bottom: 100,
@@ -179,15 +181,16 @@ class _ReelsViewState extends State<ReelsView> with TickerProviderStateMixin {
                   ),
                 ),
               ),
-              Positioned(
-                bottom: 0,
-                child: PlayerSeeker(
-                  controller: _controller.videoPlayerControllerList[index],
-                  onSeeking: (isSeeking) {
-                    _isSeekingNotifier.value = isSeeking;
-                  },
+              if (!isReelChanging)
+                Positioned(
+                  bottom: 0,
+                  child: PlayerSeeker(
+                    controller: _controller.videoPlayerControllerList[index],
+                    onSeeking: (isSeeking) {
+                      _isSeekingNotifier.value = isSeeking;
+                    },
+                  ),
                 ),
-              ),
             ],
           );
         },
@@ -224,8 +227,10 @@ class _ReelsViewState extends State<ReelsView> with TickerProviderStateMixin {
 
   Widget _buildVideoContent(int index, bool isReelChanging) {
     final isLoading =
-        _controller.loading ||
         !_controller.videoPlayerControllerList[index].value.isInitialized;
+    log(
+      "is loading => ${!_controller.videoPlayerControllerList[index].value.isInitialized}",
+    );
     if (isLoading) {
       return widget.loader ??
           const Center(child: CircularProgressIndicator(color: AppColors.red));

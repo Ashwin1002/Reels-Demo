@@ -16,6 +16,7 @@ class CachedVideoControllerService extends VideoControllerService {
     String url,
     bool isCaching,
   ) async {
+    log('checking videos in cache');
     if (isCaching) {
       FileInfo? fileInfo;
       try {
@@ -36,7 +37,7 @@ class CachedVideoControllerService extends VideoControllerService {
 
       try {
         // If video is not found in cache, attempt to download it
-        _cacheManager.downloadFile(url);
+        await _cacheManager.downloadFile(url).timeout(Duration(seconds: 15));
       } catch (e) {
         // Log error if encountered while downloading video
         log('Error downloading video: $e');
