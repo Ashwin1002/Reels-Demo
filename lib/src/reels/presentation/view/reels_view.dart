@@ -107,6 +107,7 @@ class _ReelsViewState extends State<ReelsView> with TickerProviderStateMixin {
       child: ValueListenableBuilder<bool>(
         valueListenable: _isReelChangingNotifier,
         builder: (context, isReelChanging, _) {
+          log("is reel changing => $isReelChanging");
           return Stack(
             children: [
               GestureDetector(
@@ -115,39 +116,9 @@ class _ReelsViewState extends State<ReelsView> with TickerProviderStateMixin {
               ),
 
               Positioned(
-                right: 10,
-                bottom: 100,
-                child: Opacity(
-                  opacity: isReelChanging ? .5 : 1,
-                  child: ValueListenableBuilder<bool>(
-                    valueListenable: _isSeekingNotifier,
-                    builder: (context, isSeeking, _) {
-                      return AnimatedSwitcher(
-                        duration: Duration(milliseconds: 200),
-                        transitionBuilder: (child, animation) {
-                          return FadeTransition(
-                            opacity: animation,
-                            child: child,
-                          );
-                        },
-                        child:
-                            isSeeking
-                                ? const SizedBox.shrink(
-                                  key: ValueKey("action_hidden_view"),
-                                )
-                                : ReelsActions(
-                                  key: ValueKey("action_shown_view"),
-                                ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-
-              Positioned(
-                left: 10.0,
-                bottom: 20,
-                right: 10.0,
+                left: 0.0,
+                bottom: 0,
+                right: 0.0,
                 child: Opacity(
                   opacity: isReelChanging ? .5 : 1,
                   child: ValueListenableBuilder<bool>(
@@ -177,6 +148,44 @@ class _ReelsViewState extends State<ReelsView> with TickerProviderStateMixin {
                       );
                     },
                   ),
+                ),
+              ),
+              Positioned(
+                right: 10,
+                bottom: 100,
+                child: Opacity(
+                  opacity: isReelChanging ? .5 : 1,
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: _isSeekingNotifier,
+                    builder: (context, isSeeking, _) {
+                      return AnimatedSwitcher(
+                        duration: Duration(milliseconds: 200),
+                        transitionBuilder: (child, animation) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: child,
+                          );
+                        },
+                        child:
+                            isSeeking
+                                ? const SizedBox.shrink(
+                                  key: ValueKey("action_hidden_view"),
+                                )
+                                : ReelsActions(
+                                  key: ValueKey("action_shown_view"),
+                                ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 0,
+                child: PlayerSeeker(
+                  controller: _controller.videoPlayerControllerList[index],
+                  onSeeking: (isSeeking) {
+                    _isSeekingNotifier.value = isSeeking;
+                  },
                 ),
               ),
             ],
@@ -225,11 +234,6 @@ class _ReelsViewState extends State<ReelsView> with TickerProviderStateMixin {
     final videoWidget = VideoFullScreenPage(
       controller: _controller,
       videoPlayerController: _controller.videoPlayerControllerList[index],
-      isReelChanging: isReelChanging,
-      onSeeking: (isSeeking) {
-        log("isSeeking: $isSeeking");
-        _isSeekingNotifier.value = isSeeking;
-      },
     );
 
     return widget.builder?.call(

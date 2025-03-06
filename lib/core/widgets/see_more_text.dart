@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:reels_demo/core/core.dart';
 
 typedef ReadMoreButtonBuilder =
     Widget Function(
@@ -42,7 +43,6 @@ class AnimatedReadMoreText extends StatefulWidget {
   const AnimatedReadMoreText(
     this.text, {
     super.key,
-
     this.maxLines = 3,
     this.readMoreText = 'See more',
     this.readLessText = 'See less',
@@ -54,10 +54,16 @@ class AnimatedReadMoreText extends StatefulWidget {
     this.animationCurve = Curves.easeOutBack,
     this.animationDuration = const Duration(milliseconds: 300),
     this.readMoreButtonBuilder,
+    this.maxHeightScale,
+    this.onViewChanged,
   }) : assert(maxLines > 1, 'maxLines must be greater than 1'),
        assert(text.length >= 0, 'text cannot be empty'),
        assert(readMoreText.length > 0, 'readMoreText cannot be empty'),
-       assert(readLessText.length > 0, 'readLessText cannot be empty');
+       assert(readLessText.length > 0, 'readLessText cannot be empty'),
+       assert(
+         maxHeightScale == null || (maxHeightScale > 0 && maxHeightScale <= 1),
+         'maxHeightScale must be greater than 0 and less than or equal to 1',
+       );
 
   /// The text to be displayed in the widget.
   final String text;
@@ -96,6 +102,11 @@ class AnimatedReadMoreText extends StatefulWidget {
   final Duration animationDuration;
 
   final ReadMoreButtonBuilder? readMoreButtonBuilder;
+
+  /// Scale the see less text according to the view port
+  final double? maxHeightScale;
+
+  final void Function(bool value)? onViewChanged;
 
   @override
   State<AnimatedReadMoreText> createState() => _AnimatedReadMoreTextState();
@@ -172,15 +183,33 @@ class _AnimatedReadMoreTextState extends State<AnimatedReadMoreText> {
                   isSuffixButton: widget.isSuffixButton,
                   onPressed: _toggleExpanded,
                 ),
-                secondChild: _ExpandableTextSpan(
-                  showButton: showButton,
-                  text: widget.text,
-                  style: widget.textStyle,
-                  buttonTextStyle: widget.buttonTextStyle,
-                  readMoreLessText: widget.readLessText,
-                  isSuffixButton: widget.isSuffixButton,
-                  // isSuffixButton: widget.isSuffixButton && widget.allowCollapse,
-                  onPressed: _toggleExpanded,
+                secondChild: Builder(
+                  builder: (context) {
+                    final child = _ExpandableTextSpan(
+                      showButton: showButton,
+                      text: widget.text,
+                      style: widget.textStyle,
+                      buttonTextStyle: widget.buttonTextStyle,
+                      readMoreLessText: widget.readLessText,
+                      isSuffixButton: widget.isSuffixButton,
+                      onPressed: _toggleExpanded,
+                    );
+
+                    if (widget.maxHeightScale == null) {
+                      return child;
+                    }
+                    return ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: 0.0,
+                        maxHeight:
+                            context.height * (widget.maxHeightScale ?? 0),
+                      ),
+                      child: SingleChildScrollView(
+                        // controller: _controller,
+                        child: child,
+                      ),
+                    );
+                  },
                 ),
                 crossFadeState:
                     _isExpanded
@@ -216,7 +245,12 @@ class _AnimatedReadMoreTextState extends State<AnimatedReadMoreText> {
   ///
   /// This method flips the value of [_isExpanded] and triggers a widget rebuild
   /// to reflect the updated state.
-  void _toggleExpanded() => setState(() => _isExpanded = !_isExpanded);
+  void _toggleExpanded() {
+    setState(() {
+      _isExpanded = !_isExpanded;
+    });
+    widget.onViewChanged?.call(_isExpanded);
+  }
 }
 
 /// A widget that creates an expandable text span with an optional "Read more/Read less" button.
