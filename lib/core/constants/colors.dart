@@ -25,6 +25,8 @@ class AppColors {
   // red color
   static const Color red = Colors.red;
 
+  static const Color red38 = Color.fromRGBO(244, 67, 54, .2);
+
   // transparent color
   static const Color transparent = Colors.transparent;
 }

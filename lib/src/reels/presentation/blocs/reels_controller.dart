@@ -3,7 +3,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:reels_demo/src/reels/presentation/blocs/video_controller_service.dart';
+import 'package:reels_demo/src/reels/data/repository/cache_video_controller_service.dart';
 import 'package:video_player/video_player.dart';
 
 class ReelsController extends ChangeNotifier with WidgetsBindingObserver {

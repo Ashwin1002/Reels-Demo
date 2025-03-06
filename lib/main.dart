@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:reels_demo/src/reels/presentation/blocs/reels_view.dart';
+import 'package:reels_demo/src/reels/presentation/view/reels_view.dart';
 
 void main() {
   runApp(const MyApp());

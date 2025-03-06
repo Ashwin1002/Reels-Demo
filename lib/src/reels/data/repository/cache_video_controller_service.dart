@@ -1,20 +1,10 @@
-// Importing necessary packages
-import 'dart:async'; // For asynchronous operations
-import 'dart:developer'; // For logging
-
-import 'package:flutter_cache_manager/flutter_cache_manager.dart'; // For caching files
-import 'package:video_player/video_player.dart'; // For video playback
-
-// Abstract class defining a service for obtaining video controllers
-abstract class VideoControllerService {
-  // Method to get a VideoPlayerController for a given video URL
-  Future<VideoPlayerController> getControllerForVideo(
-    String url,
-    bool isCaching,
-  );
-}
-
 // Implementation of VideoControllerService that uses caching
+import 'dart:developer';
+
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:reels_demo/src/reels/data/repository/video_controller_service.dart';
+import 'package:video_player/video_player.dart';
+
 class CachedVideoControllerService extends VideoControllerService {
   final BaseCacheManager _cacheManager;
 
@@ -28,7 +18,6 @@ class CachedVideoControllerService extends VideoControllerService {
   ) async {
     if (isCaching) {
       FileInfo? fileInfo;
-
       try {
         // Attempt to retrieve video file from cache
         fileInfo = await _cacheManager.getFileFromCache(url);
