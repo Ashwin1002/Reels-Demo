@@ -52,8 +52,6 @@ class _SelectableIconCountBuilderState
     if (widget.count != oldWidget.count) {
       _countNotifier.value = widget.count;
     }
-
-    log("update called");
   }
 
   @override
@@ -82,7 +80,6 @@ class _SelectableIconCountBuilderState
         return ValueListenableBuilder<int>(
           valueListenable: _countNotifier,
           builder: (context, count, _) {
-            log("count on rebuild: $count");
             return DefaultIconCountBuilder(
               path: widget.path,
               onPressed: () {

@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:reels_demo/core/core.dart';
 import 'package:reels_demo/src/reels/presentation/blocs/reels_controller.dart';
@@ -37,6 +39,8 @@ class ReelsView extends StatefulWidget {
 
 class _ReelsViewState extends State<ReelsView> with TickerProviderStateMixin {
   late final ReelsController _controller;
+  late final ValueNotifier<bool> _isSeekingNotifier;
+  late final ValueNotifier<bool> _isReelChangingNotifier;
 
   @override
   void initState() {
@@ -47,10 +51,15 @@ class _ReelsViewState extends State<ReelsView> with TickerProviderStateMixin {
       isCaching: widget.isCaching,
       startIndex: widget.startIndex,
     );
+
+    _isSeekingNotifier = ValueNotifier(false);
+    _isReelChangingNotifier = ValueNotifier(false);
   }
 
   @override
   void dispose() {
+    _isReelChangingNotifier.dispose();
+    _isSeekingNotifier.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -74,6 +83,7 @@ class _ReelsViewState extends State<ReelsView> with TickerProviderStateMixin {
     return VisibilityDetector(
       key: Key(index.toString()),
       onVisibilityChanged: (visibilityInfo) {
+        _onVisibiltyChanged(visibilityInfo);
         if (visibilityInfo.visibleFraction < 0.5) {
           _controller.videoPlayerControllerList[index]
             ..seekTo(Duration.zero)
@@ -81,7 +91,7 @@ class _ReelsViewState extends State<ReelsView> with TickerProviderStateMixin {
           _controller.refreshView();
           _controller.animationController.stop();
         } else {
-          _controller.videoPlayerControllerList[index].play();
+          // _controller.videoPlayerControllerList[index].play();
           Future.delayed(const Duration(milliseconds: 500), () {
             _controller.visible = false;
           });
@@ -94,22 +104,95 @@ class _ReelsViewState extends State<ReelsView> with TickerProviderStateMixin {
           _controller.visible = false;
         }
       },
-      child: Stack(
-        children: [
-          GestureDetector(
-            onTap: () => _handleVideoTap(index),
-            child: _buildVideoContent(index),
-          ),
-          Positioned(right: 10, bottom: 100, child: ReelsActions()),
-          Positioned(
-            left: 10.0,
-            bottom: 20,
-            right: 10.0,
-            child: ReelsDescriptionView(title: "", description: ""),
-          ),
-        ],
+      child: ValueListenableBuilder<bool>(
+        valueListenable: _isReelChangingNotifier,
+        builder: (context, isReelChanging, _) {
+          return Stack(
+            children: [
+              GestureDetector(
+                onTap: () => _handleVideoTap(index),
+                child: _buildVideoContent(index, isReelChanging),
+              ),
+
+              Positioned(
+                right: 10,
+                bottom: 100,
+                child: Opacity(
+                  opacity: isReelChanging ? .5 : 1,
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: _isSeekingNotifier,
+                    builder: (context, isSeeking, _) {
+                      return AnimatedSwitcher(
+                        duration: Duration(milliseconds: 200),
+                        transitionBuilder: (child, animation) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: child,
+                          );
+                        },
+                        child:
+                            isSeeking
+                                ? const SizedBox.shrink(
+                                  key: ValueKey("action_hidden_view"),
+                                )
+                                : ReelsActions(
+                                  key: ValueKey("action_shown_view"),
+                                ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+
+              Positioned(
+                left: 10.0,
+                bottom: 20,
+                right: 10.0,
+                child: Opacity(
+                  opacity: isReelChanging ? .5 : 1,
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: _isSeekingNotifier,
+                    builder: (context, isSeeking, _) {
+                      return AnimatedSwitcher(
+                        duration: Duration(milliseconds: 100),
+                        transitionBuilder: (child, animation) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: SizeTransition(
+                              sizeFactor: animation,
+                              child: child,
+                            ),
+                          );
+                        },
+                        child:
+                            isSeeking
+                                ? const SizedBox.shrink(
+                                  key: ValueKey("description_hidden_view"),
+                                )
+                                : ReelsDescriptionView(
+                                  key: ValueKey("description_shown_view"),
+                                  title: "",
+                                  description: "",
+                                ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
+  }
+
+  void _onVisibiltyChanged(VisibilityInfo visibilityInfo) {
+    if (visibilityInfo.visibleFraction > 0 &&
+        visibilityInfo.visibleFraction < 1) {
+      _isReelChangingNotifier.value = true;
+    } else {
+      _isReelChangingNotifier.value = false;
+    }
   }
 
   void _handleVideoTap(int index) {
@@ -130,7 +213,7 @@ class _ReelsViewState extends State<ReelsView> with TickerProviderStateMixin {
     }
   }
 
-  Widget _buildVideoContent(int index) {
+  Widget _buildVideoContent(int index, bool isReelChanging) {
     final isLoading =
         _controller.loading ||
         !_controller.videoPlayerControllerList[index].value.isInitialized;
@@ -142,6 +225,11 @@ class _ReelsViewState extends State<ReelsView> with TickerProviderStateMixin {
     final videoWidget = VideoFullScreenPage(
       controller: _controller,
       videoPlayerController: _controller.videoPlayerControllerList[index],
+      isReelChanging: isReelChanging,
+      onSeeking: (isSeeking) {
+        log("isSeeking: $isSeeking");
+        _isSeekingNotifier.value = isSeeking;
+      },
     );
 
     return widget.builder?.call(
