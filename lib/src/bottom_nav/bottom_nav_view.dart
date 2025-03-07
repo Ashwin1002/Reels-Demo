@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:reels_demo/core/core.dart';
-import 'package:reels_demo/src/reels/presentation/view/reels_list_screen.dart';
+import 'package:reels_demo/src/reels_editor/presentation/views/reels_editor_screen.dart';
 
 class BottomNavView extends StatefulWidget {
   const BottomNavView({super.key});
@@ -12,10 +12,7 @@ class BottomNavView extends StatefulWidget {
 class _BottomNavViewState extends State<BottomNavView> {
   int _currentPage = 0;
 
-  static final List<Widget> _screens = [
-    ReelsListScreen(key: Key("first_view")),
-    ReelsListScreen(key: Key("second_view")),
-  ];
+  static final List<Widget> _screens = [Placeholder(), ReelsEditorScreen()];
 
   @override
   Widget build(BuildContext context) {
