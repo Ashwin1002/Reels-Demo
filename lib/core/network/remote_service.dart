@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 
 abstract class RemoteService {
-  Future<dynamic> getResponse({
+  Future<Response<dynamic>> getResponse({
     required Dio dio,
     required String endPoint,
     Map<String, dynamic>? queryParameters,

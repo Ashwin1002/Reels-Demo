@@ -8,10 +8,12 @@ class ReelsDescriptionView extends StatefulWidget {
     super.key,
     required this.title,
     required this.description,
+    this.thumbnail,
   });
 
   final String title;
   final String description;
+  final ImageProvider<Object>? thumbnail;
 
   @override
   State<ReelsDescriptionView> createState() => _ReelsDescriptionViewState();
@@ -99,7 +101,7 @@ class _ReelsDescriptionViewState extends State<ReelsDescriptionView> {
                       color: AppColors.white70,
                       shape: BoxShape.circle,
                       image: DecorationImage(
-                        image: AssetImage(AssetList.music),
+                        image: widget.thumbnail ?? AssetImage(AssetList.music),
                         fit: BoxFit.cover,
                       ),
                     ),

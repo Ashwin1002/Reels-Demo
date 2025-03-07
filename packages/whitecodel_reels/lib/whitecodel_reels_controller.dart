@@ -140,7 +140,10 @@ class WhiteCodelReelsController extends GetxController
       log('Error initializing video at index $myindex: $e');
     }
 
-    animationController.repeat();
+    if (!animationController.isDismissed) {
+      animationController.repeat();
+    }
+
     videoPlayerControllerList[myindex].play();
     refreshView();
     // listenEvents(myindex);

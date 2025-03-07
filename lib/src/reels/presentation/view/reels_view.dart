@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:reels_demo/core/core.dart';
+import 'package:reels_demo/src/reels/domain/entities/reels.dart';
 import 'package:reels_demo/src/reels/presentation/widgets/widgets.dart';
 import 'package:video_player/video_player.dart';
 import 'package:whitecodel_reels/whitecodel_reels.dart';
@@ -21,6 +22,7 @@ class ReelsView extends StatefulWidget {
   final bool isCaching;
   final int startIndex;
   final VideoPlayerBuilder? builder;
+  final List<Reels> reels;
 
   const ReelsView({
     super.key,
@@ -29,6 +31,7 @@ class ReelsView extends StatefulWidget {
     this.isCaching = false,
     this.builder,
     this.startIndex = 0,
+    required this.reels,
   });
 
   @override
@@ -62,12 +65,12 @@ class _ReelsViewState extends State<ReelsView> with TickerProviderStateMixin {
       isCaching: widget.isCaching,
       loader: widget.loader,
       builder: (context, index, _, videoPlayerController, pageController) {
-        return _buildTile(videoPlayerController);
+        return _buildTile(videoPlayerController, widget.reels[index]);
       },
     );
   }
 
-  Widget _buildTile(VideoPlayerController controller) {
+  Widget _buildTile(VideoPlayerController controller, Reels reels) {
     return Stack(
       children: [
         _buildVideoContent(controller),
@@ -98,8 +101,9 @@ class _ReelsViewState extends State<ReelsView> with TickerProviderStateMixin {
                           )
                           : ReelsDescriptionView(
                             key: ValueKey("description_shown_view"),
-                            title: "",
-                            description: "",
+                            title: reels.name,
+                            description: reels.description,
+                            thumbnail: NetworkImage(reels.thumbnail),
                           ),
                 );
               },
@@ -124,7 +128,13 @@ class _ReelsViewState extends State<ReelsView> with TickerProviderStateMixin {
                           ? const SizedBox.shrink(
                             key: ValueKey("action_hidden_view"),
                           )
-                          : ReelsActions(key: ValueKey("action_shown_view")),
+                          : ReelsActions(
+                            key: ValueKey("action_shown_view"),
+                            share: reels.share,
+                            bookmark: reels.bookmark,
+                            comment: reels.comment,
+                            like: reels.like,
+                          ),
                 );
               },
             ),

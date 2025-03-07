@@ -1,5 +1,7 @@
 library;
 
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:video_player/video_player.dart';
@@ -53,6 +55,8 @@ class WhiteCodelReels extends GetView<WhiteCodelReelsController> {
                 child: CircularProgressIndicator(color: Colors.red),
               );
         }
+
+        log("page count => ${controller.pageCount.value}");
         return PageView.builder(
           controller: controller.pageController,
           itemCount: controller.pageCount.value,

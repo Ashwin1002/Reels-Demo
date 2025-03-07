@@ -6,7 +6,18 @@ import 'package:reels_demo/src/reels/presentation/widgets/selectable_icon_count_
 const _imageSize = 42.0;
 
 class ReelsActions extends StatelessWidget {
-  const ReelsActions({super.key});
+  const ReelsActions({
+    super.key,
+    this.like = 0,
+    this.comment = 0,
+    this.bookmark = 0,
+    this.share = 0,
+  });
+
+  final int like;
+  final int comment;
+  final int bookmark;
+  final int share;
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -18,22 +29,22 @@ class ReelsActions extends StatelessWidget {
           UserAvatar(),
           SelectableIconCountBuilder(
             path: AssetList.like,
-            count: 10,
+            count: like,
             onChanged: (value) {},
           ),
           DefaultIconCountBuilder(
             path: AssetList.comment,
-            count: 12000,
+            count: comment,
             onPressed: () {},
           ),
           SelectableIconCountBuilder(
             path: AssetList.bookmark,
-            count: 120,
+            count: bookmark,
             onChanged: (value) {},
           ),
           DefaultIconCountBuilder(
             path: AssetList.share,
-            count: 1234,
+            count: share,
             onPressed: () {},
           ),
         ],
