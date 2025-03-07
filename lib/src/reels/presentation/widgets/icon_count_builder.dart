@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:reels_demo/core/core.dart';
-import 'package:reels_demo/core/extensions/num_extension.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 /// Abstract class defining the common API for IconCountBuilder.
 abstract class IconCountBuilder extends StatelessWidget {
@@ -34,12 +34,14 @@ class DefaultIconCountBuilder extends IconCountBuilder {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        TapBouncer(
-          onPressed: onPressed,
-          child: ImageViewer(
-            path: path,
-            size: size ?? 30.0,
-            color: color ?? AppColors.white,
+        Skeleton.keep(
+          child: TapBouncer(
+            onPressed: onPressed,
+            child: ImageViewer(
+              path: path,
+              size: size ?? 30.0,
+              color: color ?? AppColors.white,
+            ),
           ),
         ),
         Text(

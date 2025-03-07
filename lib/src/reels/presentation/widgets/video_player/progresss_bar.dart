@@ -29,10 +29,7 @@ class VideoProgressBar extends StatefulWidget {
   final bool draggableProgressBar;
 
   @override
-  // ignore: library_private_types_in_public_api
-  _VideoProgressBarState createState() {
-    return _VideoProgressBarState();
-  }
+  State<VideoProgressBar> createState() => _VideoProgressBarState();
 }
 
 class _VideoProgressBarState extends State<VideoProgressBar> {

@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:reels_demo/core/core.dart';
-import 'package:reels_demo/core/extensions/string_extension.dart';
 
 class ImageViewer extends StatelessWidget {
   const ImageViewer({super.key, required this.path, this.color, this.size});
