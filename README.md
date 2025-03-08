@@ -30,3 +30,8 @@ Inside `Podfile`, update the line:
 ```
 platform :ios, '13.0'
 ```
+
+Once, setup is done, run the following command in your project terminal:
+```
+dart run build_runner build -d
+```
