@@ -3,6 +3,7 @@ import 'package:reels_demo/core/extensions/extensions.dart';
 import 'package:reels_demo/src/reels/data/model/reels_model.dart';
 
 class Reels extends Equatable {
+  final String id;
   final String thumbnail;
   final String videoUrl;
   final String name;
@@ -13,6 +14,7 @@ class Reels extends Equatable {
   final int bookmark;
 
   const Reels({
+    required this.id,
     required this.bookmark,
     required this.comment,
     required this.description,
@@ -25,10 +27,10 @@ class Reels extends Equatable {
 
   bool get isValid => thumbnail.isValidImageUrl && videoUrl.isValidVideoUrl;
 
-
   factory Reels.fromReelsModel(ReelsModel reels) {
     if (reels.videoUrl.isValidVideoUrl && reels.thumbnail.isValidImageUrl) {
       return Reels(
+        id: reels.id,
         bookmark: reels.bookmark,
         comment: reels.comment,
         description:
@@ -41,6 +43,7 @@ class Reels extends Equatable {
       );
     }
     return Reels(
+      id: reels.id,
       bookmark: reels.bookmark,
       comment: reels.comment,
       description:
@@ -63,5 +66,6 @@ class Reels extends Equatable {
     share,
     thumbnail,
     videoUrl,
+    id,
   ];
 }

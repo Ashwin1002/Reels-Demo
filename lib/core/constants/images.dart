@@ -23,12 +23,6 @@ class AssetList {
 
   // music album image
   static const String music = "$_imagePath/music.jpeg";
-}
 
-class Songs {
-  static const String _path = "assets/sounds";
-
-  /// APT
-  static const String apt =
-      "$_path/ROSE & Bruno Mars - APT. (Official Music Video).mp3";
+  static const String nowPlaying = "assets/lottie/now_playing.json";
 }

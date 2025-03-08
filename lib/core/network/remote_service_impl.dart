@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 import 'package:reels_demo/core/core.dart';
@@ -24,6 +26,30 @@ class RemoteServiceImpl extends RemoteService {
       return response;
     } on DioException catch (err) {
       throw ServerException(err.message ?? 'Something went wrong');
+    }
+  }
+
+  @override
+  Future<File> download({
+    required Dio dio,
+    required String url,
+    required String savedPath,
+    Map<String, dynamic>? queryParameters,
+    CancelToken? cancelToken,
+    void Function(int count, int total)? onRecieveProgress,
+  }) async {
+    try {
+      await dio.download(
+        url,
+        savedPath,
+        cancelToken: cancelToken,
+        queryParameters: queryParameters,
+        onReceiveProgress: onRecieveProgress,
+      );
+
+      return File(savedPath);
+    } on DioException catch (e) {
+      throw ServerException(e.message ?? 'Something went wrong');
     }
   }
 }

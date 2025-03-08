@@ -29,4 +29,10 @@ class AppColors {
 
   // transparent color
   static const Color transparent = Colors.transparent;
+
+  static const Color grey600 = Color.fromRGBO(117, 117, 117, 1);
+
+  static const Color darkBgColor = Color(0xff141414);
+  
+  static const Color lightDarBgColor = Color(0xff282828);
 }
