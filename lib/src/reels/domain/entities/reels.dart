@@ -28,7 +28,7 @@ class Reels extends Equatable {
   bool get isValid => thumbnail.isValidImageUrl && videoUrl.isValidVideoUrl;
 
   factory Reels.fromReelsModel(ReelsModel reels) {
-    if (reels.videoUrl.isValidVideoUrl && reels.thumbnail.isValidImageUrl) {
+    if (reels.videoUrl.isValidVideoUrl) {
       return Reels(
         id: reels.id,
         bookmark: reels.bookmark,

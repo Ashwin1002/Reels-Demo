@@ -44,7 +44,7 @@ class VideoReelsSrcView extends StatelessWidget {
               ),
           loading: () => ReelsLoadingView(),
           loaded: (data) {
-            log('remote reels length => ${data.length}');
+            log('remote reels length => ${data.map((e) => e.videoUrl)}');
             return SizedBox(
               height: context.height,
               width: context.width,

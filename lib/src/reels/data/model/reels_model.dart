@@ -19,6 +19,7 @@ sealed class ReelsModel with _$ReelsModel {
     @JsonKey(name: "page_name") @Default("") String pageName,
     @Default("") String description,
     @JsonKey(name: "hash_tags") @Default([]) List<String> tags,
+    @JsonKey(name: "local_video_url") @Default("") String localPath,
   }) = _ReelsModel;
 
   factory ReelsModel.fromJson(Map<String, dynamic> json) =>

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:reels_demo/core/core.dart';
+import 'package:reels_demo/src/reels/presentation/view/reels_list_screen.dart';
 import 'package:reels_demo/src/reels_editor/presentation/views/reels_editor_screen.dart';
 
 class BottomNavView extends StatefulWidget {
@@ -12,7 +13,10 @@ class BottomNavView extends StatefulWidget {
 class _BottomNavViewState extends State<BottomNavView> {
   int _currentPage = 0;
 
-  static final List<Widget> _screens = [Placeholder(), ReelsEditorScreen()];
+  static final List<Widget> _screens = [
+    ReelsListScreen(key: ValueKey<String>("reels_list")),
+    ReelsEditorScreen(key: ValueKey<String>("reels_editor")),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -25,8 +29,9 @@ class _BottomNavViewState extends State<BottomNavView> {
         unselectedItemColor: AppColors.white70,
         currentIndex: _currentPage,
         onTap: (value) {
-          _currentPage = value;
-          setState(() {});
+          setState(() {
+            _currentPage = value;
+          });
         },
         unselectedLabelStyle: context.theme.textTheme.bodyMedium,
         selectedLabelStyle: context.theme.textTheme.bodyMedium?.copyWith(

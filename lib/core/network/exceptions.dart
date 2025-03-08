@@ -5,6 +5,11 @@ abstract class AppException implements Exception {
 
 class ServerException extends AppException {
   ServerException(super.message);
+
+  @override
+  String toString() {
+    return super.message.toString();
+  }
 }
 
 class CacheException extends AppException {

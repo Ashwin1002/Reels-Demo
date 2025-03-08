@@ -60,6 +60,27 @@ class VideoInformation extends Equatable {
       'VideoInformation(savedPath: $savedPath, platformFile: $platformFile, frames: $frames)';
 }
 
+/// Returns a unique file path in [directoryPath] by appending a counter
+/// if a file with [fileName] already exists.
+Future<String> _getUniqueFilePath(String directoryPath, String fileName) async {
+  final file = File('$directoryPath/$fileName');
+  if (!await file.exists()) {
+    return file.path;
+  }
+  final extensionIndex = fileName.lastIndexOf('.');
+  final nameWithoutExtension =
+      (extensionIndex == -1) ? fileName : fileName.substring(0, extensionIndex);
+  final extension =
+      (extensionIndex == -1) ? '' : fileName.substring(extensionIndex);
+  int counter = 1;
+  String newPath;
+  do {
+    newPath = '$directoryPath/$nameWithoutExtension($counter)$extension';
+    counter++;
+  } while (await File(newPath).exists());
+  return newPath;
+}
+
 class VideoEditorController extends ChangeNotifier {
   VideoEditorController();
   VideoInformation? _videoInformation;
@@ -176,46 +197,103 @@ class VideoEditorController extends ChangeNotifier {
   }
 
   /// Exports the video with the selected song.
-  /// - If [isVideoMuted] is false, the original video sound is merged with the song.
-  /// - If [isVideoMuted] is true, the original audio is replaced with the song.
+  /// - If [song.url] is not empty:
+  ///   - If [isVideoMuted] is false, the original video sound is merged with the song.
+  ///   - If [isVideoMuted] is true, the original audio is replaced with the song.
+  /// - If [song.url] is empty:
+  ///   - If [isVideoMuted] is false, the original video (with its audio) is saved.
+  ///   - If [isVideoMuted] is true, the video is saved with audio removed.
   Future<String> exportVideoWithSong({
     required Song song,
     required bool isVideoMuted,
+    String? thumbnail,
+    String? description,
   }) async {
     String songPath = "";
     final tempDirectory = await getTemporaryDirectory();
-    // Check if the URL appears to be local (this is a simple check).
-    if (!(song.url.startsWith('file://') || song.url.startsWith('/'))) {
-      // Download the song if it's remote.
-      final file = await RemoteServiceImpl().download(
-        dio: Dio(),
-        url: song.url,
-        savedPath: "${tempDirectory.path}/${song.name}.mp3",
-      );
-      songPath = file.path;
-    } else {
-      songPath = song.url;
+
+    // If the song URL is not empty, handle song downloading or local path.
+    if (song.url.isNotEmpty) {
+      // Check if the URL appears to be local (this is a simple check).
+      if (!(song.url.startsWith('file://') || song.url.startsWith('/'))) {
+        // Download the song if it's remote.
+        final file = await RemoteServiceImpl().download(
+          dio: Dio(),
+          url: song.url,
+          savedPath: "${tempDirectory.path}/${song.name}.mp3",
+        );
+        songPath = file.path;
+      } else {
+        songPath = song.url;
+      }
+      log("Saved cached song path => $songPath");
     }
 
-    log("saved cached song path => $songPath");
-    final directory = await getDownloadsDirectory();
-    final outputPath =
-        '${directory?.path}/${_videoInformation?.platformFile.name}';
+    // Determine the output directory based on the platform.
+    Directory? outputDirectory;
+    if (Platform.isAndroid) {
+      outputDirectory = await getDownloadsDirectory();
+    } else if (Platform.isIOS) {
+      outputDirectory = await getApplicationDocumentsDirectory();
+    } else {
+      // Fallback for other platforms.
+      outputDirectory = await getApplicationDocumentsDirectory();
+    }
+
+    // Use a default filename if _videoInformation is null.
+    final defaultName =
+        _videoInformation?.platformFile.name ?? "exported_video.mp4";
+    final outputPath = await _getUniqueFilePath(
+      Platform.isAndroid
+          ? "/storage/emulated/0/Download"
+          : outputDirectory?.path ?? "",
+      defaultName,
+    );
 
     String command = "";
-    if (!isVideoMuted) {
-      // Merge the video's original audio with the song using the amix filter.
-      command =
-          '-i "$videoPath" -i "$songPath" -filter_complex "[0:a][1:a]amix=inputs=2:duration=first:dropout_transition=2[a]" -map 0:v -map "[a]" -c:v copy "$outputPath"';
+
+    if (song.url.isNotEmpty) {
+      // Song is provided.
+      if (!isVideoMuted) {
+        // Merge the video's original audio with the song using the amix filter.
+        command =
+            '-i "$videoPath" -i "$songPath" -filter_complex "[0:a][1:a]amix=inputs=2:duration=first:dropout_transition=2[a]" -map 0:v -map "[a]" -c:v copy "$outputPath"';
+      } else {
+        // Replace the original audio with the song.
+        command =
+            '-i "$videoPath" -i "$songPath" -map 0:v -map 1:a -c:v copy -shortest "$outputPath"';
+      }
     } else {
-      // Replace the original audio with the song.
-      command =
-          '-i "$videoPath" -i "$songPath" -map 0:v -map 1:a -c:v copy -shortest "$outputPath"';
+      // No song provided, check mute condition only.
+      if (!isVideoMuted) {
+        // Keep original video audio.
+        command = '-i "$videoPath" -c copy "$outputPath"';
+      } else {
+        // Remove audio from the video (mute it).
+        command = '-i "$videoPath" -an -c copy "$outputPath"';
+      }
     }
 
     // Execute the FFmpeg command.
     await FFmpegKit.execute(command);
 
     return outputPath;
+  }
+
+  Future<File?> extractThumbnail(String videoPath) async {
+    if (videoPath.isEmpty) return null;
+    final directory = await getApplicationDocumentsDirectory();
+    final String thumbnailPath =
+        '${directory.path}/${_videoInformation?.platformFile.name}';
+
+    // FFmpeg command to capture a frame at 1 second into the video.
+    // -ss sets the start time, -i specifies the input,
+    // -vframes 1 captures one frame, and -q:v 2 sets a high quality.
+    String command =
+        '-ss 00:00:01.000 -i "$videoPath" -vframes 1 -q:v 2 "$thumbnailPath"';
+
+    await FFmpegKit.execute(command);
+
+    return File(thumbnailPath);
   }
 }

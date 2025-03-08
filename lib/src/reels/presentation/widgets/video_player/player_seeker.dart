@@ -97,7 +97,7 @@ class _PlayerSeekerState extends State<PlayerSeeker> {
             ),
             AnimatedContainer(
               duration: Duration(milliseconds: 200),
-              height: !isSeeking ? 5 : 15,
+              height: !isSeeking ? 10 : 15,
               width: context.width,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),

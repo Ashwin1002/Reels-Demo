@@ -1,10 +1,15 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:reels_demo/core/core.dart';
+import 'package:reels_demo/src/reels/data/model/reels_model.dart';
+import 'package:reels_demo/src/reels_editor/data/repository/upload_remote_repository_impl.dart';
 import 'package:reels_demo/src/reels_editor/domain/entities/song.dart';
 import 'package:reels_demo/src/reels_editor/presentation/blocs/video_editor_controller.dart';
 import 'package:video_player/video_player.dart';
@@ -33,7 +38,9 @@ class VideoEditorCubit extends Cubit<VideoEditorState> {
   @override
   Future<void> close() {
     _songBufferingSubscription?.cancel();
-    _audioPlayer.dispose();
+    _audioPlayer
+      ..stop()
+      ..dispose();
     _videoEditorController.dispose();
     _playerController?.removeListener(_videoLoopListener);
     _playerController?.dispose();
@@ -96,7 +103,6 @@ class VideoEditorCubit extends Cubit<VideoEditorState> {
   Future<void> _restartPlayback() async {
     // Stop both audio and video.
     await _audioPlayer.stop();
-    await _playerController?.pause();
 
     // Restart audio using the selected song URL.
     await _audioPlayer.setReleaseMode(ReleaseMode.stop);
@@ -126,6 +132,7 @@ class VideoEditorCubit extends Cubit<VideoEditorState> {
   }
 
   FutureOr<void> playVideo() async {
+    await _playerController?.seekTo(Duration.zero);
     await _playerController?.play();
     await _playerController?.setLooping(true);
     emit(state.copyWith(videoPlayerValue: _playerController?.value));
@@ -140,6 +147,8 @@ class VideoEditorCubit extends Cubit<VideoEditorState> {
     if (_playerController?.value.isInitialized == true) {
       _playerController?.dispose();
     }
+    await _audioPlayer.stop();
+
     emit(
       state.copyWith(
         outputOrgAudioPath: null,
@@ -147,6 +156,9 @@ class VideoEditorCubit extends Cubit<VideoEditorState> {
         videoInformation: null,
         videoPath: null,
         videoPlayerValue: null,
+        savingStatus: SavingStatus.initial,
+        selectedSong: Song.fakeData(),
+        songAudioPlayingStatus: AudioPlayingStatus.initial,
       ),
     );
   }
@@ -167,15 +179,8 @@ class VideoEditorCubit extends Cubit<VideoEditorState> {
     // Update the selected song.
     emit(state.copyWith(selectedSong: song));
 
-    // Set release mode to stop so the audio plays only once per video loop.
-    await _audioPlayer.setReleaseMode(ReleaseMode.stop);
-
     // Start playing the selected song.
-    await _audioPlayer.play(
-      UrlSource(song.url),
-      mode: PlayerMode.lowLatency,
-      volume: 0.5,
-    );
+    await _audioPlayer.play(UrlSource(song.url), volume: 0.5);
 
     // Wait until the audio buffering is complete.
     await _audioPlayer.onPlayerStateChanged.firstWhere(
@@ -203,7 +208,7 @@ class VideoEditorCubit extends Cubit<VideoEditorState> {
     });
   }
 
-  FutureOr<void> exportVideo() async {
+  FutureOr<void> exportVideo({String? thumbnail, String? description}) async {
     final isVideoMuted = state.videoPlayerValue?.volume == 0;
 
     emit(state.copyWith(savingStatus: SavingStatus.saving));
@@ -212,15 +217,35 @@ class VideoEditorCubit extends Cubit<VideoEditorState> {
       final outputPath = await _videoEditorController.exportVideoWithSong(
         song: state.selectedSong,
         isVideoMuted: isVideoMuted,
+        thumbnail:
+            (thumbnail ?? "").isEmpty
+                ? ""
+                : base64Encode(File(thumbnail ?? "").readAsBytesSync()),
+        description: description,
+      );
+
+      await UploadRemoteRepositoryImpl().uploadReels(
+        ReelsModel(
+          id: UniqueKey().toString(),
+          createdAt: DateTime.now(),
+          pageName: outputPath.split("/").last.split(".").first,
+          description: description ?? "",
+          thumbnail: thumbnail ?? "",
+          localPath: outputPath,
+        ),
       );
 
       log("saved video path => $outputPath");
       emit(
         state.copyWith(savingStatus: SavingStatus.saved, videoPath: outputPath),
       );
-    } catch (e) {
+      cancelPressed();
+    } on ServerException catch (e) {
       // Log error and update state accordingly.
-      log('Error exporting video: $e');
+      log('Error exporting video: ${e.message}');
+      emit(state.copyWith(savingStatus: SavingStatus.error));
+    } catch (e) {
+      log('Error exporting video: ${e.toString()}');
       emit(state.copyWith(savingStatus: SavingStatus.error));
     }
   }
