@@ -1,0 +1,9 @@
+{
+    "cmake.configureOnOpen": false,
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit",
+      "source.removeUnusedImports": "explicit",
+      "source.organizeImports": "explicit"
+    }
+  }
+  

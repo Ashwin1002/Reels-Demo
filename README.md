@@ -1,17 +1,24 @@
 # reels_demo
 
-A new Flutter project.
+Tiktok like reels viewer and editor made in flutter
 
-## Getting Started
+## How to use
 
-This project is a starting point for a Flutter application.
+Use below flutter and dart version
+`Flutter version: 3.29.0 - Stable Channel`
+`Dart version: 3.7.0`
 
-A few resources to get you started if this is your first Flutter project:
+Clone the repository using: `https://github.com/Ashwin1002/Reels-Demo.git`
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Android setup
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-# Reels-Demo
+Inside `app/build.gradle`
+`ndk version: "27.0.12077973"`
+`min sdk: 24`
+
+Inside `AndroidManifest.xml`,
+
+```
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+```

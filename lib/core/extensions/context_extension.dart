@@ -12,4 +12,7 @@ extension ContextExtension on BuildContext {
 
   // pixel ratio
   double get pixelRatio => MediaQuery.devicePixelRatioOf(this);
+
+  //Theme
+  ThemeData get theme => Theme.of(this);
 }

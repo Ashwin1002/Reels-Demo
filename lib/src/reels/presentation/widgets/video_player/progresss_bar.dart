@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:reels_demo/core/core.dart';
-import 'package:reels_demo/src/reels/presentation/blocs/progress_colors.dart';
+import 'package:reels_demo/src/reels/presentation/widgets/video_player/progress_colors.dart';
 import 'package:video_player/video_player.dart';
 
 class VideoProgressBar extends StatefulWidget {
@@ -29,10 +29,7 @@ class VideoProgressBar extends StatefulWidget {
   final bool draggableProgressBar;
 
   @override
-  // ignore: library_private_types_in_public_api
-  _VideoProgressBarState createState() {
-    return _VideoProgressBarState();
-  }
+  State<VideoProgressBar> createState() => _VideoProgressBarState();
 }
 
 class _VideoProgressBarState extends State<VideoProgressBar> {

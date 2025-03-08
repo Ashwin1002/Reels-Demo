@@ -9,25 +9,22 @@ import 'package:video_player/video_player.dart'; // For video playback
 abstract class VideoControllerService {
   // Method to get a VideoPlayerController for a given video URL
   Future<VideoPlayerController> getControllerForVideo(
-    String url,
-    bool isCaching,
-  );
+      String url, bool isCaching);
 }
 
 // Implementation of VideoControllerService that uses caching
 class CachedVideoControllerService extends VideoControllerService {
-  final BaseCacheManager _cacheManager;
+  final BaseCacheManager _cacheManager; // Cache manager instance
 
   // Constructor requiring a cache manager instance
   CachedVideoControllerService(this._cacheManager);
 
   @override
   Future<VideoPlayerController> getControllerForVideo(
-    String url,
-    bool isCaching,
-  ) async {
+      String url, bool isCaching) async {
     if (isCaching) {
-      FileInfo? fileInfo;
+      FileInfo?
+          fileInfo; // Variable to store file info if video is found in cache
 
       try {
         // Attempt to retrieve video file from cache
